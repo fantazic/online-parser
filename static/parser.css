@@ -1,40 +1,23 @@
-body {
-  background: white;
-  margin: 10px;
+.thumb {
+    width: 24px;
+    height: 24px;
+    float: none;
+    position: relative;
+    top: 7px;
 }
 
-body,
-input {
-  font-family: sans-serif;
-  font-size: 10pt;
-  color: black;
+form .progress {
+    line-height: 15px;
 }
 
-table {
-  border-collapse: collapse;
-  border: 0;
+.progress {
+    display: inline-block;
+    width: 100px;
+    border: 3px groove #CCC;
 }
 
-td {
-  border: 0;
-  padding: 0;
-}
-
-#body {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-}
-
-#input {
-  margin-top: 0.5em;
-}
-
-#inbox .message {
-  padding-top: 0.25em;
-}
-
-#nav {
-  float: right;
-  z-index: 99;
+.progress div {
+    font-size: smaller;
+    background: orange;
+    width: 0;
 }
