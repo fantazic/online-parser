@@ -9,8 +9,8 @@ from tornado.concurrent import Future
 from tornado import gen
 from tornado.options import define, options, parse_command_line
 
-define("port", default=8888, help="run on the given port", type=int)
-define("debug", default=False, help="run in debug mode")
+define("port", default=8080, help="run on the given port", type=int)
+define("debug", default=True, help="run in debug mode")
 
 
 class MessageBuffer(object):
@@ -58,7 +58,7 @@ global_message_buffer = MessageBuffer()
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("index.html", messages=global_message_buffer.cache)
+        self.render("index.html")
 
 
 class MessageNewHandler(tornado.web.RequestHandler):
@@ -98,7 +98,7 @@ def main():
     parse_command_line()
     app = tornado.web.Application(
         [
-            (r"/chat", MainHandler),
+            (r"/", MainHandler),
             (r"/chat/message/new", MessageNewHandler),
             (r"/chat/message/updates", MessageUpdatesHandler),
             ],
