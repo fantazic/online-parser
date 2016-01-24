@@ -3,9 +3,12 @@ function getCookie(name) {
     return r ? r[1] : undefined;
 }
 
-var app = angular.module('fileUpload', ['ngFileUpload']);
+var app = angular.module('onlineParser', ['ngFileUpload']);
 
-app.controller('MyCtrl', ['$scope', 'Upload', '$timeout', function ($scope, Upload, $timeout) {
+
+
+app.controller('ParserCtrl', ['$scope', 'Upload', function ($scope, Upload, $timeout) {
+    $scope.rows = []
     $scope.uploadFiles = function(file, errFiles) {
         $scope.f = file;
         $scope.errFile = errFiles && errFiles[0];
@@ -16,9 +19,7 @@ app.controller('MyCtrl', ['$scope', 'Upload', '$timeout', function ($scope, Uplo
             });
 
             file.upload.then(function (response) {
-                $timeout(function () {
-                    file.result = response.data;
-                });
+                $scope.rows = response.data;
             }, function (response) {
                 if (response.status > 0)
                     $scope.errorMsg = response.status + ': ' + response.data;

@@ -8,30 +8,37 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
   </head>
-  <body>
-  <div class="container">
+  <body ng-app="onlineParser">
+  <div class="container" ng-controller="ParserCtrl">
     <div class="page-header">
       <h1>Online Parser <small>supports only TSV</small></h1>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <div ng-app="fileUpload" ng-controller="MyCtrl">
-          <h4>Upload a TSV file under 10MB</h4>
-          <button class="btn btn-default" type="file" ngf-select="uploadFiles($file, $invalidFiles)"
-                  accept=".tsv" ngf-max-size="10MB">Select File</button>
-          <div ng-show="f">File: {{! f.name }} {{! errFile.name }} {{! errFile.$error }} {{! errFile.$errorParam }}
-              <span class="progress" ng-show="f.progress >= 0">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
-                         aria-valuenow="{{! f.progress }}" aria-valuemin="0" aria-valuemax="100"
-                         style="width: {{! f.progress }}%;">
-                      {{! f.progress }}%
-                    </div>
+        <h4>Upload a TSV file under 10MB</h4>
+        <button class="btn btn-default" type="file" ngf-select="uploadFiles($file, $invalidFiles)"
+                accept=".tsv" ngf-max-size="10MB">Select File</button>
+        <div ng-show="f">File: {{! f.name }} {{! errFile.name }} {{! errFile.$error }} {{! errFile.$errorParam }}
+            <span class="progress" ng-show="f.progress >= 0">
+                <div class="progress">
+                  <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
+                       aria-valuenow="{{! f.progress }}" aria-valuemin="0" aria-valuemax="100"
+                       style="width: {{! f.progress }}%;">
+                    {{! f.progress }}%
                   </div>
-              </span>
-          </div>
-          {{! errorMsg }}
+                </div>
+            </span>
         </div>
+        {{! errorMsg }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="row in rows">
+            <td ng-repeat="col in row">{{! col }}</td>
+          </tr>
+        </table>
       </div>
     </div>
   </div>

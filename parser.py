@@ -2,8 +2,6 @@ import tornado.escape
 import tornado.ioloop
 import tornado.web
 import os.path
-import random
-import string
 
 from tornado.options import define, options, parse_command_line
 
@@ -18,14 +16,11 @@ class MainHandler(tornado.web.RequestHandler):
 
 class UploadHandler(tornado.web.RequestHandler):
     def post(self):
-        uploaded_file = self.request.files['file'][0]
-        original_fname = uploaded_file['filename']
-        extension = os.path.splitext(original_fname)[1]
-        fname = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(6))
-        final_filename = fname+extension
-        output_file = open("uploads/" + final_filename, 'w')
-        output_file.write(uploaded_file['body'])
-        self.finish("file" + final_filename + " is uploaded")
+        upload_file = self.request.files['file'][0]
+        body = upload_file['body']
+        rows = [line.split('\t') for line in (x.strip() for x in body.splitlines()) if line]
+
+        self.write(tornado.escape.json_encode(rows))
 
 
 def main():
