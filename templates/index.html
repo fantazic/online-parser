@@ -23,7 +23,7 @@
         </ul>
       </div>
     </div>
-    <div class="row">
+    <div class="row" ng-cloak>
       <div class="col-md-12">
         <h4>Upload a TSV file under 10MB</h4>
         <button class="btn btn-default" type="file" ngf-select="uploadFile($file, $invalidFiles)"
@@ -46,8 +46,8 @@
       <div class="col-md-12">
         <h4>Parsed Data</h4>
         <table class="table table-striped table-condensed">
-          <tr ng-repeat="row in rows">
-            <td ng-repeat="col in row">{{! col }}</td>
+          <tr ng-repeat="row in rows track by $index">
+            <td ng-repeat="col in row track by $index">{{! col }}</td>
           </tr>
         </table>
       </div>
