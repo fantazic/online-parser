@@ -4,6 +4,7 @@ import tornado.web
 import tornado.websocket
 import os.path
 import logging
+import re
 
 from tornado.options import define, options, parse_command_line
 
@@ -26,6 +27,9 @@ class FileHandler(tornado.websocket.WebSocketHandler):
             "total_number": len(rows),
             "data": self.rows[self.page_size * (page_no - 1):self.page_size * page_no]
         })
+
+    def check_origin(self, origin):
+        return bool(re.match(r'^.*?\.catlog\.kr', origin))
 
     def get_compression_options(self):
         # Non-None enables compression with default options.
