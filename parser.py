@@ -29,7 +29,7 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         })
 
     def check_origin(self, origin):
-        return bool(re.match(r'^.*?\.catlog\.kr', origin))
+        return options.debug or bool(re.match(r'^.*catlog\.kr', origin))
 
     def get_compression_options(self):
         # Non-None enables compression with default options.
