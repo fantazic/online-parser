@@ -13,7 +13,9 @@ app.controller('ParserCtrl', ['$scope', 'Upload', function ($scope, Upload, $tim
         };
         $scope.ws.onmessage = function(evt) {
             console.log(evt.data);
-            $scope.rows = JSON.parse(evt.data);
+            $scope.$apply(function () {
+                $scope.rows = JSON.parse(evt.data);
+            });
         };
         $scope.ws.onclose = function() {
             console.log('Connection is closed...');
