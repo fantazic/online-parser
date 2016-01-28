@@ -40,7 +40,7 @@ def main():
     parse_command_line()
     app = tornado.web.Application(
         [
-            (r"/parser", MainHandler),
+            (r"/parser/", MainHandler),
             (r"/parser/ws", FileHandler),
             ],
         cookie_secret="SX4gEWPE6bVr0vbwGtMl",

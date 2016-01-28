@@ -10,7 +10,7 @@ start() {
 }
  
 stop() {
-    pid=`ps -ef | grep '[p]ython /home/ec2-user/online-parser/parser --port='"$1" | awk '{ print $2 }'`
+    pid=`ps -ef | grep '[p]ython /home/ec2-user/online-parser/parser.py --port='"$1" | awk '{ print $2 }'`
     echo $pid
     kill $pid
     sleep 2
