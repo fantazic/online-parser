@@ -29,11 +29,11 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         logging.info("close a websocket")
 
     def on_message(self, message):
-        logging.info("got message %r (%s)", message, type(message))
+        logging.info("got message")
 
         if isinstance(message, str):
             rows = [line.split("\t") for line in (x.strip() for x in message.splitlines()) if line]
-            self.write_message(tornado.escape.json_encode(rows))
+            self.write_message(tornado.escape.json_encode(rows[:100]))
 
 
 def main():
