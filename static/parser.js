@@ -1,8 +1,12 @@
-var app = angular.module('onlineParser', ['ngFileUpload']);
+var app = angular.module('onlineParser', ['ngFileUpload', 'ui.bootstrap']);
 
-app.controller('ParserCtrl', ['$scope', 'Upload', function ($scope, Upload, $timeout) {
+app.controller('ParserCtrl', ['$scope', function ($scope) {
     $scope.ws;
-    $scope.rows = []
+    $scope.rows;
+    $scope.currentPage;
+    $scope.totalRows;
+    $scope.maxSize = 5;
+    $scope.itemsPerPage = 100;
 
     $scope.init = function() {
         $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws');
@@ -13,7 +17,12 @@ app.controller('ParserCtrl', ['$scope', 'Upload', function ($scope, Upload, $tim
         };
         $scope.ws.onmessage = function(evt) {
             console.log(evt.data);
-            $scope.rows = JSON.parse(evt.data);
+            $scope.$apply(function () {
+                message = JSON.parse(evt.data);
+                $scope.currentPage = parseInt(message['page_no'], 10);
+                $scope.totalRows = parseInt(message['total_number'], 10);
+                $scope.rows = message['data'];
+            });
         };
         $scope.ws.onclose = function() {
             console.log('Connection is closed...');
@@ -43,6 +52,12 @@ app.controller('ParserCtrl', ['$scope', 'Upload', function ($scope, Upload, $tim
 
             reader.readAsArrayBuffer(file);
         }
+    }
+
+    $scope.pageChanged = function() {
+        ws = $scope.ws;
+        console.log('currentPage: ' + $scope.currentPage);
+        ws.send($scope.currentPage);
     }
 
     $scope.init();
