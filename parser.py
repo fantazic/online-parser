@@ -17,6 +17,15 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 class FileHandler(tornado.websocket.WebSocketHandler):
+    page_size = 100
+    rows = []
+
+    def make_message(self, page_no, rows):
+        return tornado.escape.json_encode({
+            "page_no": page_no,
+            "total_number": len(rows),
+            "data": self.rows[self.page_size * (page_no - 1):self.page_size * page_no]
+        })
 
     def get_compression_options(self):
         # Non-None enables compression with default options.
@@ -32,8 +41,12 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         logging.info("got message")
 
         if isinstance(message, str):
-            rows = [line.split("\t") for line in (x.strip() for x in message.splitlines()) if line]
-            self.write_message(tornado.escape.json_encode(rows[:100]))
+            self.rows = [line.split("\t") for line in (x.strip() for x in message.splitlines()) if line]
+            self.write_message(self.make_message(1, self.rows))
+        else:
+            logging.info("page_no: " + message)
+            page_no = int(message)
+            self.write_message(self.make_message(page_no, self.rows))
 
 
 def main():
