@@ -32,23 +32,27 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         logging.info("got message %r (%s)", message, type(message))
 
         if isinstance(message, str):
-            rows = [line.split('\t') for line in (x.strip() for x in message.splitlines()) if line]
+            rows = [line.split("\t") for line in (x.strip() for x in message.splitlines()) if line]
             self.write_message(tornado.escape.json_encode(rows))
 
 
 def main():
     parse_command_line()
-    app = tornado.web.Application(
-        [
+    settings = dict(
+            cookie_secret="SX4gEWPE6bVr0vbwGtMl",
+            template_path=os.path.join(os.path.dirname(__file__), "templates"),
+            static_path=os.path.join(os.path.dirname(__file__), "static"),
+            xsrf_cookies=True,
+            debug=options.debug
+    )
+
+    handlers = [
             (r"/parser/", MainHandler),
             (r"/parser/ws", FileHandler),
-            ],
-        cookie_secret="SX4gEWPE6bVr0vbwGtMl",
-        template_path=os.path.join(os.path.dirname(__file__), "templates"),
-        static_path=os.path.join(os.path.dirname(__file__), "static"),
-        xsrf_cookies=True,
-        debug=options.debug,
-        )
+            (r"/parser/static/(.*)", tornado.web.StaticFileHandler, {"path": settings["static_path"]})
+    ]
+
+    app = tornado.web.Application(handlers, **settings)
     app.listen(options.port)
     tornado.ioloop.IOLoop.current().start()
 
