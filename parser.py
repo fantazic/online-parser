@@ -23,11 +23,11 @@ class FileHandler(tornado.websocket.WebSocketHandler):
     rows = []
 
     def make_message(self, page_no):
-        return tornado.escape.json_encode({
+        return {
             "page_no": page_no,
             "total_number": len(self.rows),
             "data": self.rows[self.page_size * (page_no - 1):self.page_size * page_no]
-        })
+        }
 
     def check_origin(self, origin):
         return options.debug or bool(re.match(r'^.*\catlog\.kr', origin))
