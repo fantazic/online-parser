@@ -5,6 +5,7 @@ import tornado.websocket
 import os.path
 import logging
 import re
+import csv
 
 from tornado.options import define, options, parse_command_line
 
@@ -21,15 +22,15 @@ class FileHandler(tornado.websocket.WebSocketHandler):
     page_size = 100
     rows = []
 
-    def make_message(self, page_no, rows):
+    def make_message(self, page_no):
         return tornado.escape.json_encode({
             "page_no": page_no,
-            "total_number": len(rows),
+            "total_number": len(self.rows),
             "data": self.rows[self.page_size * (page_no - 1):self.page_size * page_no]
         })
 
     def check_origin(self, origin):
-        return options.debug or bool(re.match(r'^.*catlog\.kr', origin))
+        return options.debug or bool(re.match(r'^.*\catlog\.kr', origin))
 
     def get_compression_options(self):
         # Non-None enables compression with default options.
@@ -45,12 +46,13 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         logging.info("got message")
 
         if isinstance(message, str):
-            self.rows = [line.split("\t") for line in (x.strip() for x in message.splitlines()) if line]
-            self.write_message(self.make_message(1, self.rows))
+            self.rows = [csv.reader([line], delimiter="\t").next()
+                         for line in (x.strip() for x in message.splitlines()) if line]
+            self.write_message(self.make_message(1))
         else:
             logging.info("page_no: " + message)
             page_no = int(message)
-            self.write_message(self.make_message(page_no, self.rows))
+            self.write_message(self.make_message(page_no))
 
 
 def main():
