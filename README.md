@@ -13,8 +13,13 @@
     * keep the file in memory for each connection
 * AngularJS and Bootstrap
     * ng-file-upload
-    * pagination
+    * ui-bootstrap for pagination
     
 ### Demo
 * [Live Demo](http://catlog.kr/parser/)
 * test with [this sample file](https://github.com/fantazic/online-parser/tree/master/sample/sample.tsv)
+
+### Nginx
+If you want to use NGINX for proxy, check these pages.
+* proxy websocketws: [websocket proxy setting](https://www.nginx.com/blog/websocket-nginx/)
+* If you get 403 status: [websocket origin check](http://stackoverflow.com/questions/24800436/under-tornado-v4-websocket-connections-get-refused-with-403)
