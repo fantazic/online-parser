@@ -1,6 +1,6 @@
-var app = angular.module('onlineParser', ['ngFileUpload', 'ui.bootstrap']);
+var app = angular.module('onlineParser', ['ngFileUpload', 'ui.bootstrap', 'ngAnimate']);
 
-app.controller('ParserCtrl', ['$scope', function ($scope) {
+app.controller('ParserCtrl', ['$scope', '$timeout', function ($scope, $timeout) {
     $scope.ws;
     $scope.rows;
     $scope.currentPage;
@@ -15,7 +15,9 @@ app.controller('ParserCtrl', ['$scope', function ($scope) {
 
         $scope.ws.onopen = function() {
             console.log('Connected.');
-            $scope.isConnected = true;
+            $scope.$apply(function () {
+                $scope.isConnected = true;
+            });
         };
         $scope.ws.onmessage = function(evt) {
             console.log(evt.data);
@@ -28,7 +30,9 @@ app.controller('ParserCtrl', ['$scope', function ($scope) {
         };
         $scope.ws.onclose = function() {
             console.log('Connection is closed...');
-            $scope.isConnected = false;
+            $scope.$apply(function () {
+                $scope.isConnected = false;
+            });
         };
         $scope.ws.onerror = function(e) {
             console.log(e.msg);
@@ -63,5 +67,5 @@ app.controller('ParserCtrl', ['$scope', function ($scope) {
         ws.send($scope.currentPage);
     }
 
-    $scope.init();
+    $timeout($scope.init, 1000);
 }]);
