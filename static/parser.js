@@ -7,25 +7,28 @@ app.controller('ParserCtrl', ['$scope', function ($scope) {
     $scope.totalRows;
     $scope.maxSize = 5;
     $scope.itemsPerPage = 100;
+    $scope.isConnected = false;
 
     $scope.init = function() {
         $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws');
         $scope.ws.binaryType = 'arraybuffer';
 
         $scope.ws.onopen = function() {
-            console.log('Connected.')
+            console.log('Connected.');
+            $scope.isConnected = true;
         };
         $scope.ws.onmessage = function(evt) {
             console.log(evt.data);
             $scope.$apply(function () {
                 message = JSON.parse(evt.data);
-                $scope.currentPage = parseInt(message['page_no'], 10);
-                $scope.totalRows = parseInt(message['total_number'], 10);
+                $scope.currentPage = parseInt(message['page_no']);
+                $scope.totalRows = parseInt(message['total_number']);
                 $scope.rows = message['data'];
             });
         };
         $scope.ws.onclose = function() {
             console.log('Connection is closed...');
+            $scope.isConnected = false;
         };
         $scope.ws.onerror = function(e) {
             console.log(e.msg);

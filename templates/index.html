@@ -24,6 +24,10 @@
         </ul>
       </div>
     </div>
+    <div>
+      <div class="alert alert-success fade in" role="alert" ng-show="isConnected">Connected to the server</div>
+      <div class="alert alert-danger fade" role="alert" ng-hide="isConnected">Disconnected</div>
+    </div>
     <div class="row" id="uploader" ng-cloak>
       <div class="col-md-12">
         <h4>Upload a TSV file under 10MB</h4>
