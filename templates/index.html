@@ -25,7 +25,7 @@
         </ul>
       </div>
     </div>
-    <div ng-cloak>
+    <div ng-init="uuid = '{{ uuid }}'" ng-cloak>
       <div class="alert" ng-class="{'alert-success': isConnected,'alert-danger': !isConnected}" role="alert">
         <div ng-switch="isConnected">
           <div class="status-fade" ng-switch-when="true">
@@ -35,6 +35,9 @@
             Disconnected. Wait a second...
           </div>
         </div>
+      </div>
+      <div class="well" ng-show="uuid">
+        <a href="/parser/share/{{! uuid }}" target="_blank">Click to share this view</a>
       </div>
     </div>
     <div class="row" id="uploader" ng-cloak>

@@ -20,8 +20,10 @@ lock = tornado.locks.Lock()
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render("index.html")
+    def get(self, client_uuid=""):
+        logging.info("index with (uuid: %s)" % client_uuid)
+
+        self.render("index.html", uuid=client_uuid)
 
 
 class FileHandler(tornado.websocket.WebSocketHandler):
@@ -47,18 +49,19 @@ class FileHandler(tornado.websocket.WebSocketHandler):
                 logging.error("Error sending message", exc_info=True)
 
     @classmethod
-    def load_file(cls, client_uuid, tsv_file):
-        cls.files[client_uuid] = [csv.reader([line], delimiter="\t").next()
-                                  for line in (x.strip() for x in tsv_file.splitlines()) if line]
-
-    @classmethod
     def make_message(cls, client_uuid, page_no):
         rows = cls.files[client_uuid]
         return {
+            "uuid": str(client_uuid),
             "page_no": page_no,
             "total_number": len(rows),
             "data": rows[cls.page_size * (page_no - 1):cls.page_size * page_no]
         }
+
+    @classmethod
+    def load_file(cls, client_uuid, tsv_file):
+        cls.files[client_uuid] = [csv.reader([line], delimiter="\t").next()
+                                  for line in (x.strip() for x in tsv_file.splitlines()) if line]
 
     @classmethod
     @tornado.gen.coroutine
@@ -79,7 +82,7 @@ class FileHandler(tornado.websocket.WebSocketHandler):
             if client_uuid in cls.clients:
                 clients_with_uuid = FileHandler.clients[client_uuid]
                 clients_removed = clients_with_uuid.remove(client)
-                if len(clients_removed) == 0:
+                if not clients_removed:
                     del cls.clients[client_uuid]
                 else:
                     cls.clients[client_uuid] = clients_removed
@@ -94,11 +97,13 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         # Non-None enables compression with default options.
         return {}
 
-    def open(self):
-        logging.info("open a websocket")
+    def open(self, client_uuid=None):
+        logging.info("open a websocket (uuid: %s)" % client_uuid)
 
         # Random UUID
         self.uuid = uuid.uuid4()
+        logging.info("new client with (uuid: %s)" % self.uuid)
+
         FileHandler.add_clients(self.uuid, self)
 
     def on_close(self):
@@ -131,7 +136,9 @@ def main():
 
     handlers = [
             (r"/parser/", MainHandler),
+            (r"/parser/share/([^/]+)", MainHandler),
             (r"/parser/ws", FileHandler),
+            (r"/parser/ws/([^/]+)", FileHandler),
             (r"/parser/static/(.*)", tornado.web.StaticFileHandler, {"path": settings["static_path"]})
     ]
 

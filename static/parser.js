@@ -8,9 +8,14 @@ app.controller('ParserCtrl', ['$scope', '$timeout', function ($scope, $timeout) 
     $scope.maxSize = 5;
     $scope.itemsPerPage = 100;
     $scope.isConnected = false;
+    $scope.uuid;
 
     $scope.init = function() {
-        $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws');
+        if ($scope.uuid) {
+            $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws/' + $scope.uuid);
+        } else {
+            $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws');
+        }
         $scope.ws.binaryType = 'arraybuffer';
 
         $scope.ws.onopen = function() {
@@ -23,6 +28,7 @@ app.controller('ParserCtrl', ['$scope', '$timeout', function ($scope, $timeout) 
             console.log(evt.data);
             $scope.$apply(function () {
                 message = JSON.parse(evt.data);
+                $scope.uuid = message['uuid'];
                 $scope.currentPage = parseInt(message['page_no']);
                 $scope.totalRows = parseInt(message['total_number']);
                 $scope.rows = message['data'];
