@@ -2,6 +2,8 @@
 * a user can upload a TSV file
 * a user can view a table of content
 * a user can move between pages
+* a user can share the page with others
+    * every action is synced among shared users
 
 ### Author
 * Jongwook Kim fantazic@gmail.com
