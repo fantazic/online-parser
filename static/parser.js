@@ -1,31 +1,44 @@
-var app = angular.module('onlineParser', ['ngFileUpload', 'ui.bootstrap']);
+var app = angular.module('onlineParser', ['ngFileUpload', 'ui.bootstrap', 'ngAnimate']);
 
-app.controller('ParserCtrl', ['$scope', function ($scope) {
+app.controller('ParserCtrl', ['$scope', '$timeout', function ($scope, $timeout) {
     $scope.ws;
     $scope.rows;
     $scope.currentPage;
     $scope.totalRows;
     $scope.maxSize = 5;
     $scope.itemsPerPage = 100;
+    $scope.isConnected = false;
+    $scope.uuid;
 
     $scope.init = function() {
-        $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws');
+        if ($scope.uuid) {
+            $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws/' + $scope.uuid);
+        } else {
+            $scope.ws = new WebSocket('ws://' + location.host + '/parser/ws');
+        }
         $scope.ws.binaryType = 'arraybuffer';
 
         $scope.ws.onopen = function() {
-            console.log('Connected.')
+            console.log('Connected.');
+            $scope.$apply(function () {
+                $scope.isConnected = true;
+            });
         };
         $scope.ws.onmessage = function(evt) {
             console.log(evt.data);
             $scope.$apply(function () {
                 message = JSON.parse(evt.data);
-                $scope.currentPage = parseInt(message['page_no'], 10);
-                $scope.totalRows = parseInt(message['total_number'], 10);
+                $scope.uuid = message['uuid'];
+                $scope.currentPage = parseInt(message['page_no']);
+                $scope.totalRows = parseInt(message['total_number']);
                 $scope.rows = message['data'];
             });
         };
         $scope.ws.onclose = function() {
             console.log('Connection is closed...');
+            $scope.$apply(function () {
+                $scope.isConnected = false;
+            });
         };
         $scope.ws.onerror = function(e) {
             console.log(e.msg);
@@ -60,5 +73,5 @@ app.controller('ParserCtrl', ['$scope', function ($scope) {
         ws.send($scope.currentPage);
     }
 
-    $scope.init();
+    $timeout($scope.init, 1000);
 }]);
