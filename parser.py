@@ -37,10 +37,11 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         self.uuid = None
 
     @classmethod
-    def send_message(cls, client_uuid, page_no):
+    def send_messages(cls, client_uuid):
         clients_with_uuid = cls.clients[client_uuid]
         logging.info("sending message to %d clients", len(clients_with_uuid))
-        message = cls.make_message(client_uuid, page_no)
+
+        message = cls.make_message(client_uuid)
 
         for client in clients_with_uuid:
             try:
@@ -49,10 +50,20 @@ class FileHandler(tornado.websocket.WebSocketHandler):
                 logging.error("Error sending message", exc_info=True)
 
     @classmethod
-    def make_message(cls, client_uuid, page_no):
-        rows = cls.files[client_uuid]
+    def send_message(cls, client_uuid, client):
+        clients_with_uuid = cls.clients[client_uuid]
+        logging.info("sending message to %d clients", len(clients_with_uuid))
+
+        message = cls.make_message(client_uuid)
+        client.write_message(message)
+
+    @classmethod
+    def make_message(cls, client_uuid):
+        rows = cls.files[client_uuid]["rows"]
+        page_no = cls.files[client_uuid]["page_no"]
+
         return {
-            "uuid": str(client_uuid),
+            "uuid": client_uuid,
             "page_no": page_no,
             "total_number": len(rows),
             "data": rows[cls.page_size * (page_no - 1):cls.page_size * page_no]
@@ -60,32 +71,37 @@ class FileHandler(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def load_file(cls, client_uuid, tsv_file):
-        cls.files[client_uuid] = [csv.reader([line], delimiter="\t").next()
+        rows = [csv.reader([line], delimiter="\t").next()
                                   for line in (x.strip() for x in tsv_file.splitlines()) if line]
+
+        cls.files[client_uuid] = {"rows": rows, "page_no": 1}
 
     @classmethod
     @tornado.gen.coroutine
     def add_clients(cls, client_uuid, client):
+        logging.info("add a client with (uuid: %s)" % client_uuid)
+
         # locking clients
         with (yield lock.acquire()):
             if client_uuid in cls.clients:
                 clients_with_uuid = FileHandler.clients[client_uuid]
-                FileHandler.clients[client_uuid] = clients_with_uuid.append(client)
+                clients_with_uuid.append(client)
             else:
                 FileHandler.clients[client_uuid] = [client]
 
     @classmethod
     @tornado.gen.coroutine
     def remove_clients(cls, client_uuid, client):
+        logging.info("remove a client with (uuid: %s)" % client_uuid)
+
         # locking clients
         with (yield lock.acquire()):
             if client_uuid in cls.clients:
                 clients_with_uuid = FileHandler.clients[client_uuid]
-                clients_removed = clients_with_uuid.remove(client)
-                if not clients_removed:
+                clients_with_uuid.remove(client)
+
+                if len(clients_with_uuid) == 0:
                     del cls.clients[client_uuid]
-                else:
-                    cls.clients[client_uuid] = clients_removed
 
             if client_uuid not in cls.clients and client_uuid in cls.files:
                 del cls.files[client_uuid]
@@ -100,9 +116,16 @@ class FileHandler(tornado.websocket.WebSocketHandler):
     def open(self, client_uuid=None):
         logging.info("open a websocket (uuid: %s)" % client_uuid)
 
-        # Random UUID
-        self.uuid = uuid.uuid4()
-        logging.info("new client with (uuid: %s)" % self.uuid)
+        if client_uuid is None:
+            # Generate a random UUID
+            self.uuid = str(uuid.uuid4())
+
+            logging.info("new client with (uuid: %s)" % self.uuid)
+        else:
+            self.uuid = client_uuid
+            FileHandler.send_message(self.uuid, self)
+
+            logging.info("new client sharing (uuid: %s)" % self.uuid)
 
         FileHandler.add_clients(self.uuid, self)
 
@@ -112,16 +135,17 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         FileHandler.remove_clients(self.uuid, self)
 
     def on_message(self, message):
-        logging.info("got message")
+        logging.info("got message (uuid: %s)" % self.uuid)
 
         if isinstance(message, str):
             FileHandler.load_file(self.uuid, message)
-            page_no = 1
         else:
             logging.info("page_no: " + message)
-            page_no = int(message)
 
-        FileHandler.send_message(self.uuid, page_no)
+            page_no = int(message)
+            FileHandler.files[self.uuid]["page_no"] = page_no
+
+        FileHandler.send_messages(self.uuid)
 
 
 def main():
