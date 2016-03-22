@@ -20,10 +20,10 @@ lock = tornado.locks.Lock()
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self, client_uuid=""):
-        logging.info("index with (uuid: %s)" % client_uuid)
+    def get(self, doc_uuid=""):
+        logging.info("index with (uuid: %s)" % doc_uuid)
 
-        self.render("index.html", uuid=client_uuid)
+        self.render("index.html", uuid=doc_uuid)
 
 
 class FileHandler(tornado.websocket.WebSocketHandler):
@@ -37,11 +37,11 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         self.uuid = None
 
     @classmethod
-    def send_messages(cls, client_uuid):
-        clients_with_uuid = cls.clients[client_uuid]
+    def send_messages(cls, doc_uuid):
+        clients_with_uuid = cls.clients[doc_uuid]
         logging.info("sending message to %d clients", len(clients_with_uuid))
 
-        message = cls.make_message(client_uuid)
+        message = cls.make_message(doc_uuid)
 
         for client in clients_with_uuid:
             try:
@@ -50,61 +50,61 @@ class FileHandler(tornado.websocket.WebSocketHandler):
                 logging.error("Error sending message", exc_info=True)
 
     @classmethod
-    def send_message(cls, client_uuid, client):
-        clients_with_uuid = cls.clients[client_uuid]
+    def send_message(cls, doc_uuid, client):
+        clients_with_uuid = cls.clients[doc_uuid]
         logging.info("sending message to %d clients", len(clients_with_uuid))
 
-        message = cls.make_message(client_uuid)
+        message = cls.make_message(doc_uuid)
         client.write_message(message)
 
     @classmethod
-    def make_message(cls, client_uuid):
-        rows = cls.files[client_uuid]["rows"]
-        page_no = cls.files[client_uuid]["page_no"]
+    def make_message(cls, doc_uuid):
+        rows = cls.files[doc_uuid]["rows"]
+        page_no = cls.files[doc_uuid]["page_no"]
 
         return {
-            "uuid": client_uuid,
+            "uuid": doc_uuid,
             "page_no": page_no,
             "total_number": len(rows),
             "data": rows[cls.page_size * (page_no - 1):cls.page_size * page_no]
         }
 
     @classmethod
-    def load_file(cls, client_uuid, tsv_file):
+    def load_file(cls, doc_uuid, tsv_file):
         rows = [csv.reader([line], delimiter="\t").next()
                                   for line in (x.strip() for x in tsv_file.splitlines()) if line]
 
-        cls.files[client_uuid] = {"rows": rows, "page_no": 1}
+        cls.files[doc_uuid] = {"rows": rows, "page_no": 1}
 
     @classmethod
     @tornado.gen.coroutine
-    def add_clients(cls, client_uuid, client):
-        logging.info("add a client with (uuid: %s)" % client_uuid)
+    def add_clients(cls, doc_uuid, client):
+        logging.info("add a client with (uuid: %s)" % doc_uuid)
 
         # locking clients
         with (yield lock.acquire()):
-            if client_uuid in cls.clients:
-                clients_with_uuid = FileHandler.clients[client_uuid]
+            if doc_uuid in cls.clients:
+                clients_with_uuid = FileHandler.clients[doc_uuid]
                 clients_with_uuid.append(client)
             else:
-                FileHandler.clients[client_uuid] = [client]
+                FileHandler.clients[doc_uuid] = [client]
 
     @classmethod
     @tornado.gen.coroutine
-    def remove_clients(cls, client_uuid, client):
-        logging.info("remove a client with (uuid: %s)" % client_uuid)
+    def remove_clients(cls, doc_uuid, client):
+        logging.info("remove a client with (uuid: %s)" % doc_uuid)
 
         # locking clients
         with (yield lock.acquire()):
-            if client_uuid in cls.clients:
-                clients_with_uuid = FileHandler.clients[client_uuid]
+            if doc_uuid in cls.clients:
+                clients_with_uuid = FileHandler.clients[doc_uuid]
                 clients_with_uuid.remove(client)
 
                 if len(clients_with_uuid) == 0:
-                    del cls.clients[client_uuid]
+                    del cls.clients[doc_uuid]
 
-            if client_uuid not in cls.clients and client_uuid in cls.files:
-                del cls.files[client_uuid]
+            if doc_uuid not in cls.clients and doc_uuid in cls.files:
+                del cls.files[doc_uuid]
 
     def check_origin(self, origin):
         return options.debug or bool(re.match(r'^.*\catlog\.kr', origin))
@@ -113,16 +113,16 @@ class FileHandler(tornado.websocket.WebSocketHandler):
         # Non-None enables compression with default options.
         return {}
 
-    def open(self, client_uuid=None):
-        logging.info("open a websocket (uuid: %s)" % client_uuid)
+    def open(self, doc_uuid=None):
+        logging.info("open a websocket (uuid: %s)" % doc_uuid)
 
-        if client_uuid is None:
+        if doc_uuid is None:
             # Generate a random UUID
             self.uuid = str(uuid.uuid4())
 
             logging.info("new client with (uuid: %s)" % self.uuid)
         else:
-            self.uuid = client_uuid
+            self.uuid = doc_uuid
             FileHandler.send_message(self.uuid, self)
 
             logging.info("new client sharing (uuid: %s)" % self.uuid)
