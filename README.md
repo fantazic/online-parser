@@ -7,6 +7,7 @@
 
 ### Author
 * Jongwook Kim fantazic@gmail.com
+* Toptal Blog [How to Create a Simple Python WebSocket Server Using Tornado](https://www.toptal.com/tornado/simple-python-websocket-server)
 
 ### System
 * Web Sockets on Tornado web server
