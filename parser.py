@@ -71,11 +71,8 @@ class FileHandler(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def load_file(cls, doc_uuid, tsv_file):
-        #tsv_file is of type bytes, 
-        #we need explicit conversion if it differs from str (python3)	
         if not (bytes is str):
             tsv_file = str(tsv_file, 'utf-8')
-        #csv.reader has lost its next() method in python3
         lines = [ x.strip() for x in tsv_file.splitlines() if x.strip() ]
         rows = list( csv.reader(lines, delimiter="\t") )
 
@@ -141,7 +138,6 @@ class FileHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         logging.info("got message (uuid: %s)" % self.uuid)
-        #for binary data we get str here in python2.7 and bytes in python3
         if isinstance(message, type(b'')):
             FileHandler.load_file(self.uuid, message)
         else:
