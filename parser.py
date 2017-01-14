@@ -73,7 +73,7 @@ class FileHandler(tornado.websocket.WebSocketHandler):
     def load_file(cls, doc_uuid, tsv_file):
         if not (bytes is str):
             tsv_file = str(tsv_file, 'utf-8')
-        lines = [ x.strip() for x in tsv_file.splitlines() if x.strip() ]
+        lines = ( x.strip() for x in tsv_file.splitlines() if x.strip() )
         rows = list( csv.reader(lines, delimiter="\t") )
 
         cls.files[doc_uuid] = {"rows": rows, "page_no": 1}
