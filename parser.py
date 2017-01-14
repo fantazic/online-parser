@@ -71,8 +71,10 @@ class FileHandler(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def load_file(cls, doc_uuid, tsv_file):
-        rows = [csv.reader([line], delimiter="\t").next()
-                                  for line in (x.strip() for x in tsv_file.splitlines()) if line]
+        if not (bytes is str):
+            tsv_file = str(tsv_file, 'utf-8')
+        lines = ( x.strip() for x in tsv_file.splitlines() if x.strip() )
+        rows = list( csv.reader(lines, delimiter="\t") )
 
         cls.files[doc_uuid] = {"rows": rows, "page_no": 1}
 
@@ -136,8 +138,7 @@ class FileHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         logging.info("got message (uuid: %s)" % self.uuid)
-
-        if isinstance(message, str):
+        if isinstance(message, type(b'')):
             FileHandler.load_file(self.uuid, message)
         else:
             logging.info("page_no: " + message)
